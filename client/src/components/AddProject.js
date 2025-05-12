@@ -70,7 +70,6 @@ function AddProject({ ping, setping }) {
         });
       });
   };
-  
 
   const filteredUsers =
     users?.filter((u) => {

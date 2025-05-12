@@ -67,6 +67,7 @@ export const taskSlice = createSlice({
       })
       .addCase(addtask.fulfilled, (state, action) => {
         state.status = "success";
+        // state.taskList = action.payload.data.task;
       })
       .addCase(addtask.rejected, (state) => {
         state.status = "fail";

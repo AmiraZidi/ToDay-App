@@ -15,9 +15,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import Navbarr from "../components/Navbarr";
-import { addtask, edittask } from "../Redux/taskSlice";
+import { addtask, deletetask, edittask } from "../Redux/taskSlice";
 import AddTask from "./AddTask";
-import { ArrowRepeat } from "react-bootstrap-icons";
+import { ArrowRepeat, Trash } from "react-bootstrap-icons";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -31,9 +31,8 @@ const Project = ({ ping, setping }) => {
   const projects = useSelector((state) => state.project.projectList);
   const tasks = useSelector((state) => state.task.taskList || []);
 
-  const project = projects.find((p) => p._id === params.id);
-  const mytasks = tasks.filter((task) => task.projectId === project?._id);
-
+  let project = projects?.find((p) => p._id === params.id);
+  let responsable = project?.members?.find((m) => m.id === user?._id);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -128,12 +127,14 @@ const Project = ({ ping, setping }) => {
         );
       }) || [];
 
-  const tachesCompletees = mytasks.filter(
-    (t) => t.status === "Complétée"
+  const tachesCompletees = tasks.filter(
+    (t) => t.status === "Complétée" && t.projectId === project?._id
   ).length;
-  const tachesEnCours = mytasks.filter((t) => t.status === "En cours").length;
-  const tachesEnAttente = mytasks.filter(
-    (t) => t.status === "En attente"
+  const tachesEnCours = tasks.filter(
+    (t) => t.status === "En cours" && t.projectId === project?._id
+  ).length;
+  const tachesEnAttente = tasks.filter(
+    (t) => t.status === "En attente" && t.projectId === project?._id
   ).length;
 
   const data = {
@@ -177,13 +178,35 @@ const Project = ({ ping, setping }) => {
         setping(!ping);
       })
       .catch((error) => {
-        console.error("Erreur:", error); // Log de l'erreur
+        console.error("Erreur:", error);
         Swal.fire(
           "Erreur",
           error.message || "Erreur lors de la mise à jour du statut",
           "error"
         );
       });
+  };
+
+  const deletemodal = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        dispatch(deletetask(id));
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your task has been deleted.",
+          icon: "success",
+        });
+        setping((prevPing) => !prevPing);
+      }
+    });
   };
 
   if (!project) {
@@ -244,91 +267,117 @@ const Project = ({ ping, setping }) => {
                       {project.id_admin === user._id && (
                         <th>Modifier Responsable</th>
                       )}
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {mytasks.map((task, index) => {
-                      let progressValue, variant, statusColor;
-                      switch (task.status) {
-                        case "En attente":
-                          progressValue = 0;
-                          variant = "danger";
-                          statusColor = "text-danger";
-                          break;
-                        case "En cours":
-                          progressValue = 50;
-                          variant = "info";
-                          statusColor = "text-info";
-                          break;
-                        case "Complétée":
-                          progressValue = 100;
-                          variant = "success";
-                          statusColor = "text-success";
-                          break;
-                        default:
-                          break;
-                      }
+                    {tasks
+                      .filter((task) => task.projectId === project?._id)
+                      .map((task, index) => {
+                        let progressValue, variant, statusColor;
+                        switch (task.status) {
+                          case "En attente":
+                            progressValue = 0;
+                            variant = "danger";
+                            statusColor = "text-danger";
+                            break;
+                          case "En cours":
+                            progressValue = 50;
+                            variant = "info";
+                            statusColor = "text-info";
+                            break;
+                          case "Complétée":
+                            progressValue = 100;
+                            variant = "success";
+                            statusColor = "text-success";
+                            break;
+                          default:
+                            progressValue = 0;
+                            variant = "secondary";
+                            statusColor = "";
+                        }
 
-                      return (
-                        <tr key={index}>
-                          <td>{task.name}</td>
-                          <td>
-                            {users
-                              ?.filter((u) =>
-                                task.responsables?.includes(u._id)
-                              )
-                              .map((u) => u.name)
-                              .join(", ") || "-"}
-                          </td>
-                          <td
-                            className={statusColor}
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            {task.status}
-                            <ArrowRepeat
-                              size={20}
-                              className="ms-2"
-                              onClick={() =>
-                                changeStatus(task._id, task.status)
-                              }
-                              style={{ cursor: "pointer" }}
-                            />
-                          </td>
-                          <td>
-                            <ProgressBar
-                              now={progressValue}
-                              variant={variant}
-                              label={`${progressValue}%`}
-                            />
-                          </td>
-                          <td>{task.priority}</td>
-                          <td>
-                            {task.end_at
-                              ? new Date(task.end_at)
-                                  .toISOString()
-                                  .split("T")[0]
-                              : "-"}
-                          </td>
+                        return (
+                          <tr key={index}>
+                            <td>{task.name}</td>
 
-                          {project.id_admin === user._id && (
                             <td>
-                              <Button
-                                variant="primary"
-                                onClick={() =>
-                                  openEditModal(task._id, task.responsables)
-                                }
-                              >
-                                Changer
-                              </Button>
+                              {users
+                                ?.filter((u) =>
+                                  task.responsables?.includes(u._id)
+                                )
+                                .map((u) => `${u.name} ${u.last_name}`)
+                                .join(", ") || "-"}
                             </td>
-                          )}
-                        </tr>
-                      );
-                    })}
+
+                            <td
+                              className={statusColor}
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              {task.status}
+                              {(task.responsables?.length === 0 ||
+                                task.responsables.includes(user._id)) && (
+                                <ArrowRepeat
+                                  size={20}
+                                  className="ms-2"
+                                  onClick={() =>
+                                    changeStatus(task._id, task.status)
+                                  }
+                                  style={{ cursor: "pointer" }}
+                                />
+                              )}
+                            </td>
+
+                            <td>
+                              <ProgressBar
+                                now={progressValue}
+                                variant={variant}
+                                label={`${progressValue}%`}
+                              />
+                            </td>
+
+                            <td>{task.priority}</td>
+
+                            <td>
+                              {task.end_at
+                                ? new Date(task.end_at)
+                                    .toISOString()
+                                    .split("T")[0]
+                                : "-"}
+                            </td>
+
+                            {project?.id_admin === user?._id && (
+                              <>
+                                <td>
+                                  <Button
+                                    variant="primary"
+                                    onClick={() =>
+                                      openEditModal(task._id, task.responsables)
+                                    }
+                                  >
+                                    Changer
+                                  </Button>
+                                </td>
+                                <td>
+                                  <button
+                                    className="suggdeletebtn"
+                                    onClick={() => {
+                                      deletemodal(task._id);
+                                      setping(!ping);
+                                    }}
+                                  >
+                                    <Trash size={25} color="red" />
+                                  </button>
+                                </td>
+                              </>
+                            )}
+                          </tr>
+                        );
+                      })}
                   </tbody>
                 </Table>
               </div>
@@ -355,8 +404,10 @@ const Project = ({ ping, setping }) => {
                   </thead>
                   <tbody>
                     {filteredUsers.map((user, index) => {
-                      const userTasks = mytasks.filter((task) =>
-                        task.responsables?.includes(user._id)
+                      const userTasks = tasks.filter(
+                        (task) =>
+                          task.responsables?.includes(user._id) &&
+                          task.projectId === project?._id
                       );
 
                       const completedTasks = userTasks.filter(
@@ -370,7 +421,9 @@ const Project = ({ ping, setping }) => {
 
                       return (
                         <tr key={index}>
-                          <td>{user.name}</td>
+                          <td>
+                            {user.name} {user.last_name}
+                          </td>
                           <td>{totalTasks}</td>
                           <td>
                             <ProgressBar

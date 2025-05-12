@@ -9,10 +9,11 @@ const {
   registerRules,
   validation,
 } = require("../middleware/validator");
+const transporter = require("../config/email");
 
 //register
 userRouter.post("/register", registerRules(), validation, async (req, res) => {
-  const { name, last_name, email, password, category, profile_photo } =
+  const { name, last_name, email, password, profile_photo } =
     req.body;
   try {
     let newuser = new User(req.body);
@@ -77,7 +78,6 @@ userRouter.get("/current", isAuth(), (req, res) => {
 });
 
 // get all users
-
 userRouter.get("/", async (req, res) => {
   try {
     let result = await User.find();

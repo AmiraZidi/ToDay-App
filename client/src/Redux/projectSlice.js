@@ -36,15 +36,17 @@ export const deleteproject = createAsyncThunk("project/delete", async (id) => {
 
 export const editproject = createAsyncThunk(
   "project/edit",
-  async ({ id, editedproject }) => {
+  async ({ id, editedProject }, { rejectWithValue }) => {
     try {
-      let result = axios.put(
+      const response = await axios.put(
         `http://localhost:5000/project/${id}`,
-        editedproject
+        editedProject
       );
-      return result;
+      return response.data;
     } catch (error) {
-      console.log(error);
+      return rejectWithValue(
+        error.response?.data || "Failed to update project"
+      );
     }
   }
 );

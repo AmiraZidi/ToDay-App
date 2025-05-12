@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { deleteproject } from "../Redux/projectSlice";
 import Swal from "sweetalert2";
 import EditProfil from "./EditProfil";
+import Editproject from "./EditProject";
 
 function Profil({ ping, setping }) {
   const user = useSelector((state) => state.user?.user);
@@ -30,10 +31,10 @@ function Profil({ ping, setping }) {
         dispatch(deleteproject(id));
         Swal.fire({
           title: "Deleted!",
-          text: "Your Trip project has been deleted.",
+          text: "Your project has been deleted.",
           icon: "success",
         });
-        setping((prevPing) => !prevPing);
+        setping((prevping) => !prevping);
       }
     });
   };
@@ -51,10 +52,10 @@ function Profil({ ping, setping }) {
         dispatch(deleteproject(id)).then(() => {
           Swal.fire({
             title: "Deleted!",
-            text: "Your Trip project has been deleted.",
+            text: "Your project has been deleted.",
             icon: "success",
           });
-          setping((prevPing) => !prevPing);
+          setping((prevping) => !prevping);
         });
       }
     });
@@ -95,7 +96,7 @@ function Profil({ ping, setping }) {
                 <th>Name</th>
                 <th>Description</th>
                 <th>Progress</th>
-                <th colSpan={2}>Actions</th>
+                <th colSpan={3}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -122,6 +123,15 @@ function Profil({ ping, setping }) {
                         }}
                       >
                         <Trash size={25} color="red" />
+                      </button>
+                    </td>
+                    <td>
+                      <button className="suggdeletebtn">
+                        <Editproject
+                          ping={ping}
+                          setping={setping}
+                          project={el}
+                        />
                       </button>
                     </td>
                   </tr>

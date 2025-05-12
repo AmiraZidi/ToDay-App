@@ -51,26 +51,18 @@ export const userLogin = createAsyncThunk(
 //   }
 // );
 
-export const userCurrent = createAsyncThunk(
-  "user/current",
-  async (_, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        return rejectWithValue("Token is missing");
-      }
-      const response = await axios.get("http://localhost:5000/user/current", {
-        headers: {
-          Authorization: `Bearer ${token}`, 
-        },
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data || "An error occurred");
-    }
+export const userCurrent = createAsyncThunk("user/current", async () => {
+  try {
+    let response = await axios.get("http://localhost:5000/user/current", {
+      headers: {
+        Authorization: localStorage.getItem("token"),
+      },
+    });
+    return await response;
+  } catch (error) {
+    console.log(error);
   }
-);
-
+});
 
 // ✅ Edit User Profile (Fixed error handling)
 export const editUser = createAsyncThunk(
@@ -169,11 +161,10 @@ export const userSlice = createSlice({
       })
       .addCase(userCurrent.fulfilled, (state, action) => {
         state.status = "success";
-        state.user = action.payload.user;
+        state.user = action.payload?.data.user;
       })
       .addCase(userCurrent.rejected, (state, action) => {
         state.status = "fail";
-        state.error = action.payload;
       })
 
       // // Forgot Password (NEW)

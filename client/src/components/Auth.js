@@ -110,7 +110,6 @@ function Auth() {
                   setLogin({ ...login, password: e.target.value })
                 }
               />
-              <Link to="/forgotpassword">Forgot password?</Link>
               <button type="submit" href="/">
                 Log In
               </button>

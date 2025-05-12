@@ -64,9 +64,9 @@ function AddTask({
                 }
               >
                 <option value="">-- Sélectionner --</option>
-                <option value="Haute">Haute</option>
-                <option value="Moyenne">Moyenne</option>
-                <option value="Basse">Basse</option>
+                <option value="3">3</option>
+                <option value="2">2</option>
+                <option value="1">1</option>
               </Form.Control>
             </Form.Group>
 
